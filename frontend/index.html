@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Analysis Studio</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <h1>📊 Data Analysis Studio</h1>
+    <span class="sub">Python + TypeScript + Rust/WASM + PostgreSQL</span>
+    <span class="wasm-badge off" id="wasmBadge">⚡ checking…</span>
+    <div class="spacer"></div>
+    <button class="btn" id="btnImportCsv">Import CSV</button>
+    <button class="btn" id="btnExportCsv">Export sheet CSV</button>
+    <button class="btn" id="btnCreateDoeDesign">Create Factorial Design</button>
+    <input type="file" id="fileInput" accept=".csv,.tsv,.txt" style="display:none">
+  </header>
+
+  <div class="main-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h2>Worksheets</h2>
+        <div id="sheetList"></div>
+        <button class="btn small add-sheet" id="btnAddSheet" style="width:calc(100% - 16px);margin:0 8px;">+ New Group</button>
+      </div>
+      <div class="sidebar-section">
+        <h2>Graphs</h2>
+        <div id="graphList"><div class="hint">No graphs open.</div></div>
+      </div>
+      <div class="sidebar-section">
+        <h2>Session</h2>
+        <div class="sheet-item" id="btnGotoSession"><span class="grip">▤</span><span>Session Log</span></div>
+      </div>
+      <div class="divider"></div>
+      <div class="hint">Each dataset is a "group" — e.g. Line A vs Line B, or Control vs Treatment. Compare them, or run manufacturing SPC charts on any one of them, from the Charts tab.</div>
+    </aside>
+
+    <div class="content">
+      <div class="tabs">
+        <div class="tab-btn active" data-tab="grid">Data Grid</div>
+        <div class="tab-btn" data-tab="charts">Charts &amp; Comparison</div>
+        <div class="tab-btn" data-tab="session">Session</div>
+      </div>
+
+      <div class="view" id="view-grid">
+        <div class="grid-toolbar">
+          <span class="fname" id="sheetNameLabel"></span>
+          <button class="btn small" id="btnAddRow">+ Row</button>
+          <button class="btn small" id="btnAddCol">+ Column</button>
+          <button class="btn small" id="btnSortColumn">Sort A→Z</button>
+          <span style="color:var(--text-soft);font-size:12px;margin-left:auto;">Click a cell, then paste (⌘/Ctrl+V) or type. Select a range and copy (⌘/Ctrl+C) to paste into Excel. Scrolls smoothly to tens of thousands of rows — only what's on screen is ever loaded.</span>
+        </div>
+        <div class="grid-shell" id="gridContainer"></div>
+      </div>
+
+      <div class="view hidden" id="view-charts">
+        <div class="builder-layout">
+          <div class="builder-panel">
+            <h3>Build a chart</h3>
+
+            <div class="field">
+              <label>Chart type</label>
+              <select id="selChartType">
+                <optgroup label="General">
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="radar">Radar</option>
+                  <option value="scatter">Scatter</option>
+                  <option value="pie">Pie (group totals)</option>
+                  <option value="doughnut">Doughnut (group totals)</option>
+                </optgroup>
+                <optgroup label="Manufacturing / SPC">
+                  <option value="imr">I-MR Control Chart</option>
+                  <option value="xbar_r">Xbar-R Control Chart</option>
+                  <option value="xbar_s">Xbar-S Control Chart</option>
+                  <option value="histogram_capability">Histogram + Capability (Cp/Cpk/Pp/Ppk)</option>
+                  <option value="pareto">Pareto Chart</option>
+                  <option value="sixpack">Process Capability Sixpack</option>
+                  <option value="boxplot">Boxplot</option>
+                  <option value="probability_plot">Normal Probability Plot</option>
+                  <option value="gauge_rr">Gauge R&amp;R Study</option>
+                </optgroup>
+                <optgroup label="Statistical Tests">
+                  <option value="descriptive_stats">Descriptive Statistics</option>
+                  <option value="one_sample_t">1-Sample t-Test</option>
+                  <option value="two_sample_t">2-Sample t-Test</option>
+                  <option value="paired_t">Paired t-Test</option>
+                  <option value="one_way_anova">One-Way ANOVA</option>
+                  <option value="regression">Simple Linear Regression</option>
+                  <option value="correlation">Correlation Matrix</option>
+                </optgroup>
+                <optgroup label="Design of Experiments">
+                  <option value="doe_effects">Factorial Effects Analysis (DOE)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="field" id="fieldModeToggle">
+              <label>Compare</label>
+              <div class="seg" id="segMode">
+                <button data-mode="single" class="active">Within one group</button>
+                <button data-mode="multi">Across groups</button>
+              </div>
+            </div>
+
+            <div class="field" id="fieldSingleSheet">
+              <label>Group (dataset)</label>
+              <select id="selSheet"></select>
+            </div>
+
+            <div class="field" id="fieldMultiSheets">
+              <label>Groups to compile &amp; compare</label>
+              <div class="checklist" id="checkSheets"></div>
+            </div>
+
+            <div class="field checkrow" id="fieldStacked">
+              <label><input type="checkbox" id="chkStacked"> Stacked bars</label>
+            </div>
+
+            <div class="field" id="fieldX">
+              <label>X axis / category column</label>
+              <select id="selX"></select>
+            </div>
+
+            <div class="field" id="fieldYMulti">
+              <label>Value column(s) to plot as series</label>
+              <div class="checklist" id="checkY"></div>
+              <div class="helptext" id="yMultiHint">Each checked column becomes its own series. In "Across groups" mode, only the first checked column is used — each group becomes one series.</div>
+            </div>
+
+            <div class="field" id="fieldYSingle" style="display:none;">
+              <label>Value column</label>
+              <select id="selYSingle"></select>
+            </div>
+
+            <div class="field" id="fieldYSingle2" style="display:none;">
+              <label>Second value column</label>
+              <select id="selYSingle2"></select>
+            </div>
+
+            <div class="field" id="fieldHypMean" style="display:none;">
+              <label>Hypothesized mean</label>
+              <input type="number" id="inpHypMean" value="0" step="any">
+            </div>
+
+            <div class="field" id="fieldGaugePart" style="display:none;">
+              <label>Part column</label>
+              <select id="selGaugePart"></select>
+            </div>
+
+            <div class="field" id="fieldGaugeOperator" style="display:none;">
+              <label>Operator column</label>
+              <select id="selGaugeOperator"></select>
+            </div>
+
+            <div class="field" id="fieldGroupBy">
+              <label>Split into groups by column (optional)</label>
+              <select id="selGroupBy">
+                <option value="">— none —</option>
+              </select>
+              <div class="helptext">e.g. a "Shift" or "Region" column — each unique value becomes its own comparison series.</div>
+            </div>
+
+            <div class="field" id="fieldAgg">
+              <label>Aggregation (when values repeat per category)</label>
+              <select id="selAgg">
+                <option value="avg">Average</option>
+                <option value="sum">Sum</option>
+                <option value="count">Count</option>
+                <option value="min">Min</option>
+                <option value="max">Max</option>
+              </select>
+            </div>
+
+            <div class="field" id="fieldSubgroup" style="display:none;">
+              <label>Subgroup size</label>
+              <input type="number" id="inpSubgroupSize" min="2" max="10" value="5">
+              <div class="helptext">Rational subgroup size, e.g. 5 consecutive parts per sample.</div>
+            </div>
+
+            <div class="field" id="fieldSpecLimits" style="display:none;">
+              <label>Spec limits</label>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="inpLsl" placeholder="LSL">
+                <input type="text" id="inpTarget" placeholder="Target (optional)">
+                <input type="text" id="inpUsl" placeholder="USL">
+              </div>
+            </div>
+
+            <div id="liveStatsPanel" class="live-stats" style="display:none;"></div>
+
+            <div class="field">
+              <label>Chart title</label>
+              <input type="text" id="inpTitle" placeholder="e.g. Diameter — Line A vs Line B">
+            </div>
+
+            <button class="btn primary" id="btnGenerate" style="width:100%;justify-content:center;">+ Add chart to dashboard</button>
+          </div>
+
+          <div class="graph-workspace" id="graphWorkspace">
+            <div class="workspace-empty" id="workspaceEmpty">No graphs yet. Configure the panel on the left and click "+ Add chart to dashboard".</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="view hidden" id="view-session">
+        <div class="grid-toolbar">
+          <span class="fname">Session</span>
+          <button class="btn small" id="btnClearSession">Clear</button>
+        </div>
+        <pre id="sessionLog" class="session-log"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="./bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+
+# Node / frontend build output
+frontend/node_modules/
+frontend/dist/
+frontend/src/wasm-pkg/
+
+# Rust/WASM build artifacts
+wasm/target/
+
+# OS
+.DS_Store
+
+# Editor / tooling state
+.claude/
+

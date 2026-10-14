@@ -1,0 +1,19 @@
+{
+  "name": "data-analysis-studio-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "TypeScript frontend for Data Analysis Studio -- the interactive grid and charts, bundled with esbuild into one offline-runnable file.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "mkdir -p dist && esbuild src/main.ts --bundle --outfile=dist/bundle.js --format=iife --minify --sourcemap --external:./wasm-pkg/* && cp index.html dist/index.html && cp styles.css dist/styles.css && (test -d src/wasm-pkg && cp -r src/wasm-pkg dist/wasm-pkg || echo 'wasm not built yet, skipping (app still works without it)')",
+    "dev": "mkdir -p dist && cp index.html dist/index.html && cp styles.css dist/styles.css && esbuild src/main.ts --bundle --outfile=dist/bundle.js --format=iife --sourcemap --external:./wasm-pkg/* --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5",
+    "typescript": "^5.5.4"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}

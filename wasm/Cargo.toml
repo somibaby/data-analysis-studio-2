@@ -1,0 +1,15 @@
+[package]
+name = "spc-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "Fast client-side SPC math (control limits, Cpk) compiled to WebAssembly, called directly from the TypeScript frontend for instant live feedback while editing the grid."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+
+[profile.release]
+opt-level = "s"
+lto = true
